@@ -1,0 +1,49 @@
+===================================
+graph: 1
+(1): a b c 
+(2): b c e d 
+(3): a b d e c 
+===================================
+graph: 2
+(1): a c b 
+===================================
+graph: 3
+(1): a b c d 
+(2): b c d 
+(3): c d f 
+(4): a b c d f e 
+(5): b c d f e 
+(6): c d f e 
+(7): a b c e 
+(8): b c e 
+(9): c e f 
+(10): a b c e f d 
+(11): b c e f d 
+(12): a b c f d 
+(13): b c f d 
+(14): a b c f e 
+(15): b c f e 
+(16): a b d 
+(17): a b d c e 
+(18): b d c e 
+(19): a b d c f e 
+(20): b d c f e 
+(21): a b d f c e 
+(22): b d f c e 
+(23): a b d f e 
+(24): b d f e 
+(25): a b e 
+(26): a b e c d 
+(27): a b e c f d 
+(28): a b e f c d 
+(29): a b e f d 
+(30): a d b c e 
+(31): a d b c f e 
+(32): a d b e 
+(33): a d c b e 
+(34): a d c e 
+(35): a d c f e 
+(36): a d f c b e 
+(37): a d f c e 
+(38): a d f e 
+===================================

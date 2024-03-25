@@ -1,108 +1,309 @@
 #include <iostream>
 #include <regex>
 #include <string>
-
+#include <stack>
+#include <vector> 
+#include <fstream>
 using namespace std;
-bool **matrix;
-int matrixSize;
 
+ifstream inputFile("input.txt");
+ofstream outputFile("output.txt");
+vector<string> permutations;
 
-int getLastValue(string str){
+typedef struct Node
+{
+    string name;
+    int index;
+    vector<bool> reachable;
 
-    string lastValue;
-    regex pattern(",");
-    regex_token_iterator<string::iterator> iterator(str.begin(), str.end(), pattern, -1);
-    regex_token_iterator<string::iterator> end;
-
-    while (iterator != end) {
-        lastValue = iterator->str();
-        ++iterator;
+    Node(string name, int index){
+        this->name = name;
+        this->index = index;
     }
 
-    return stoi(lastValue);
+} Node;
 
+string invertString(string str){
+
+    string resp = "";
+
+    //ignore the last char becuse it is a space 
+    for(int c = str.length() -2; c >= 0; c--){ 
+        resp += str[c];
+    }
+    //add back the space ignored before
+    resp += " ";
+
+    return resp;
 }
 
-void fillMatrix(){
+//codigo de geeksforgeeks
+string rotateString(string s, int d){
 
-    for(int c = 0; c < matrixSize; c++){
-        for(int i = 0; i < matrixSize; i++){
-            matrix[c][i] = 0;
+    reverse(s.begin(), s.begin()+d);
+    reverse(s.begin()+d, s.end());
+    reverse(s.begin(), s.end());
+
+    return s;
+}
+
+class Graph{
+
+    private:
+
+        vector<Node> nodes;
+        vector<vector<bool>> matrix;
+        vector<string> cicles;
+        bool directed;
+        char mode;
+
+        int getNodeIndex(string str){
+
+            for(Node n : nodes){
+                if(n.name.compare(str) == 0){
+                    return n.index;
+                }
+            }
+
+            return -1;
         }
-    }
-}
 
-void setMatrix(string str) {
+        void setNodes(string str){
 
-    matrixSize = getLastValue(str) + 1;
-    
-    matrix = new bool*[matrixSize];
+            regex pattern(",");
+            regex_token_iterator<string::iterator> tokenIterator(str.begin(), str.end(), pattern, -1);
+            regex_token_iterator<string::iterator> end;
+            int index = 0;
 
-    for(int c = 0; c < matrixSize; c++){
-        matrix[c] = new bool[matrixSize];
-    }
+            while (tokenIterator != end) {
+                nodes.push_back(Node(tokenIterator->str(), index));
+                index++;
+                tokenIterator++;
+            }
 
-    fillMatrix();
+            setMatrix();
+        }
 
-}
+        void setMatrix(){
 
-void setEdges(string str){
+            int nodesSize = nodes.size();
 
-    regex pattern("\\{(\\d+),(\\d+)\\}");
-    smatch matches;
-    int line, colum;
+            matrix.resize(nodesSize);
 
-    while (regex_search(str, matches, pattern)) {
-
-        line = stoi(matches[1]);
-        colum = stoi(matches[2]);
-        matrix[line][colum] = 1;
-
-        str = matches.suffix();
-    }
-}
-
-void setGraph(string str){
-
-    regex pattern("\n");
-    regex_token_iterator<string::iterator> iterator(str.begin(), str.end(), pattern, -1);
-    regex_token_iterator<string::iterator> end;
+            for(vector<bool> &n : matrix){
+                n.resize(nodesSize);
+            }
 
 
-    setMatrix(iterator->str().c_str());
-    iterator++;
-    setEdges(iterator->str().c_str());
-}
+        }
 
-void freeMatrix(){
+        void setVerticies(string str){
 
-    for (int c = 0; c < matrixSize; c++)
-    {
-        delete[] matrix[c];
-    }
+            regex pattern("\\{([a-zA-Z]+),([a-zA-Z]+)\\}");
+            smatch matches;
+            
+            while (std::regex_search(str, matches, pattern)) {
 
-    delete[] matrix;
-    
-}
+                matrix[getNodeIndex(matches[2])][getNodeIndex(matches[1])] = true;   
 
-void printmatrix(){
+                if(!directed){
+                    matrix[getNodeIndex(matches[1])][getNodeIndex(matches[2])] = true;
+                }   
 
-    for(int c = 0; c < matrixSize; c++){
-        for(int i = 0; i < matrixSize; i++){
-            printf(" %i", matrix[c][i]);
+                str = matches.suffix();
+            }
+
+        }
+
+    public:
+
+        void set(string str){
+            clear();
+            regex pattern("/");
+            regex_token_iterator<string::iterator> iterator(str.begin(), str.end(), pattern, -1);
+            regex_token_iterator<string::iterator> end;
+            
+            if(iterator->str().compare("d") == 0){
+                directed = true;
+            }else if(iterator->str().compare("nd") == 0){
+                directed = false;
+            }else{
+                directed = false;
+                outputFile << "invalid flag, set to not directed\n";
+            }
+
+            iterator++;
+            setNodes(iterator->str());
+            iterator++;
+            setVerticies(iterator->str());
+            
+
+        }
+
+        Graph(){
+
+        }
+
+        Graph(string str){
+            set(str);
+        }
+
+        bool isCicle(string path){
+            return true;
+        }
+
+        void validatePermutations(){
+
+            for(string s : permutations){
+                if(isCicle(s) && !isInsertedCicle(s)){
+                    cicles.push_back(s);        
+                }
+            }
+
+        }
+
+        void findCicles(char mode){
+
+            if(mode != 'W' && mode != 'P') return;
+
+            this->mode = mode;
+
+            for (Node n : nodes){
+                findCicles(n.name);
+            }
+
+            if(mode == 'P'){
+                validatePermutations();
+            }
+        }
+
+        void findCicles(string nodeName) {
+
+            int currentNodeIndex = getNodeIndex(nodeName);
+            vector<int> path;
+            vector<bool> founded(nodes.size(), false);
+
+            nodes[currentNodeIndex].reachable.resize(nodes.size(), false);
+
+            findCicles(currentNodeIndex, path, founded, currentNodeIndex);
+ 
+        }
+
+        void findCicles(int index, vector<int> path, vector<bool> founded, const int root) {
+            
+            if(founded[index]){
+                if (path[path.size()-2] != nodes[index].index){
+
+                    if(mode == 'W'){
+                        addCicle(path, index);
+                    }else{
+                        permutations.push_back(getPathString(path, index));
+                    }
+                }
+                
+                return;
+            }
+
+            nodes[root].reachable[index] = true;
+            path.push_back(index);
+            founded[index] = true;
+
+            for (int c = 0; c < nodes.size(); c++) {
+                if (matrix[c][index]) {
+                    findCicles(c, path, founded, root);
+                }
+            }
+        }
+
+        bool isEqualCicle(string a, string b){
+
+            string reversedCicle = invertString(a);
+
+            if(a.size() == b.size()){
+                for(int c = 0; c < a.size(); c++){
+                    if((b.compare(rotateString(a, c)) == 0) ||
+                        b.compare(rotateString(reversedCicle, c)) == 0){
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+
+        }
+
+        bool isInsertedCicle(string cicle){
+            for(string str : cicles){
+                if(isEqualCicle(cicle, str)) return true;
+            }
+
+            return false;
         }
         
-        printf("\n");
+        string getPathString(vector<int>path, int root){
 
+            string resp = "";
+
+            while(path.front() != root){
+                path.erase(path.begin());
+            }
+
+            for(int index : path){
+                resp += nodes[index].name + " ";
+            }
+            
+            return resp;
+
+        }
+
+        void addCicle(vector<int>path, int root){
+
+            string cicleStr = getPathString(path, root);
+
+            if(!isInsertedCicle(cicleStr)){
+                cicles.push_back(cicleStr);
+            }
+
+        }
+
+        void writeCicles(){
+
+            int counter = 1;
+
+            for(string str : cicles){
+                outputFile << "(" << counter++ << "): ";
+                outputFile << str << endl;
+            }
+        }
+
+        void clear(){
+            nodes.clear();
+            matrix.clear();
+            cicles.clear();
+            permutations.clear();
+        }
+
+
+};
+
+int main(int argc, char const *argv[])
+{ 
+    Graph graph;
+    string inputString;
+    int count = 1;
+
+    while (getline(inputFile, inputString)) {
+
+        outputFile << "===================================\n";
+        outputFile << "graph: " << count++ << endl;
+        graph.set(inputString);
+        graph.findCicles('W');
+        graph.writeCicles();
     }
-}
 
-int main() {
-    
-    string input = "0,1,2,3,4,5\n{1,2},{2,5}";
-    setGraph(input);
-    printmatrix();
-    freeMatrix();
+    outputFile << "===================================\n";
 
+    inputFile.close();
+    outputFile.close();
     return 0;
 }
