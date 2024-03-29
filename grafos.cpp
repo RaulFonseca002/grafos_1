@@ -1,9 +1,11 @@
 #include <iostream>
 #include <regex>
 #include <string>
-#include <stack>
+#include <queue>
 #include <vector> 
 #include <fstream>
+#include <time.h>
+
 using namespace std;
 
 ifstream inputFile("input.txt");
@@ -148,23 +150,35 @@ class Graph{
             set(str);
         }
 
-        bool isCicle(string path){
-            return true;
+        bool canReach(string root, string end){
+
+            int indexRoot = getNodeIndex(root);
+            int indexEnd = getNodeIndex(end);
+
+            if(indexRoot != indexEnd){
+                return (matrix[indexRoot][indexEnd]);
+            }
+
+            return false;
         }
 
         void validatePermutations(){
 
             for(string s : permutations){
-                if(isCicle(s) && !isInsertedCicle(s)){
-                    cicles.push_back(s);        
-                }
+
+                if((s.size() > 4) && canReach(s.substr(0,1), s.substr((s.length()-2),1))){
+                    if(!isInsertedCicle(s)){
+                        cicles.push_back(s);        
+                    }
+                }                
+                
+
             }
 
         }
 
         void findCicles(char mode){
 
-            if(mode != 'W' && mode != 'P') return;
 
             this->mode = mode;
 
@@ -175,39 +189,64 @@ class Graph{
             if(mode == 'P'){
                 validatePermutations();
             }
+
+
+        }
+
+        void setReachable(const int root){
+
+            int index = root;
+            nodes[index].reachable.resize(nodes.size(), false);
+            nodes[index].reachable[index] = true;
+
+            queue<int> q;
+            q.push(index);
+
+            while(!q.empty()){
+                index = q.front();
+                q.pop();
+
+                for (int c = 0; c < nodes.size(); c++) {
+                    if (matrix[c][index]) {
+                        if(!nodes[root].reachable[c]){
+                            nodes[root].reachable[c] = true;
+                            q.push(c);
+                        }
+                    }
+                }
+            }
+            
         }
 
         void findCicles(string nodeName) {
 
-            int currentNodeIndex = getNodeIndex(nodeName);
+            int index = getNodeIndex(nodeName);
             vector<int> path;
             vector<bool> founded(nodes.size(), false);
 
-            nodes[currentNodeIndex].reachable.resize(nodes.size(), false);
+            setReachable(index);
+            findCicles(index, path, founded, index);
 
-            findCicles(currentNodeIndex, path, founded, currentNodeIndex);
+
  
         }
 
         void findCicles(int index, vector<int> path, vector<bool> founded, const int root) {
             
             if(founded[index]){
-                if (path[path.size()-2] != nodes[index].index){
-
-                    if(mode == 'W'){
-                        addCicle(path, index);
-                    }else{
-                        permutations.push_back(getPathString(path, index));
-                    }
+                if ((path[path.size()-2] != nodes[index].index) && mode == 'W'){
+                    addCicle(path, index);
                 }
                 
                 return;
             }
-
+            
             nodes[root].reachable[index] = true;
             path.push_back(index);
             founded[index] = true;
 
+            if(mode == 'P') permutations.push_back(getPathString(path, root));
+            
             for (int c = 0; c < nodes.size(); c++) {
                 if (matrix[c][index]) {
                     findCicles(c, path, founded, root);
@@ -291,13 +330,14 @@ int main(int argc, char const *argv[])
     Graph graph;
     string inputString;
     int count = 1;
+    clock_t tStart = clock();
 
     while (getline(inputFile, inputString)) {
 
         outputFile << "===================================\n";
         outputFile << "graph: " << count++ << endl;
         graph.set(inputString);
-        graph.findCicles('W');
+        graph.findCicles('P');
         graph.writeCicles();
     }
 
@@ -305,5 +345,8 @@ int main(int argc, char const *argv[])
 
     inputFile.close();
     outputFile.close();
+
+    printf("Time taken: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
+
     return 0;
 }
