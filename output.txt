@@ -1,19 +1,19 @@
 ===================================
 graph: 1
-permutation time: 232
-walk time: 8
+permutation time: 1087
+walk time: 951
 (1): a b c 
 (2): a b d e c 
 (3): b c e d 
 ===================================
 graph: 2
-permutation time: 19
-walk time: 6
+permutation time: 80
+walk time: 62
 (1): a c b 
 ===================================
 graph: 3
-permutation time: 12075
-walk time: 15
+permutation time: 28898
+walk time: 13492
 (1): a b c d 
 (2): a b c d f e 
 (3): a b c e 
