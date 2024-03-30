@@ -207,14 +207,17 @@ class Graph{
             if(mode == 'P') permutations.push_back(getPathString(path, root));
 
             for (int c = 0; c < nodes.size(); c++) {
+                
                 if (matrix[c][index]) {
 
-                    if( mode == 'W' && matrix[path[0]][c]){
-                        if(isCircle(getPathString(path, root))) addCicle(getPathString(path, root));
-                        return;
+                    if(c == root){
+                        if(mode == 'W')
+                            addCicle(getPathString(path, root));
+                    }else{
+                        findCicles(c, path, founded, root);
                     }
 
-                    findCicles(c, path, founded, root);
+                    
                 }
             }
         }
@@ -262,7 +265,7 @@ class Graph{
 
         void addCicle(string path){
 
-            if(!isInsertedCicle(path)){
+            if(isCircle(path) && !isInsertedCicle(path)){
                 cicles.push_back(path);
             }
 
@@ -283,6 +286,10 @@ class Graph{
             matrix.clear();
             cicles.clear();
             permutations.clear();
+        }
+
+        void clearCicles(){
+            cicles.clear();
         }
 
 
@@ -309,6 +316,8 @@ int main(int argc, char const *argv[])
         end = chrono::steady_clock::now();
         P_time =  chrono::duration_cast<chrono::microseconds>(end - begin).count();
         
+        graph.clearCicles();
+
         begin = chrono::steady_clock::now();
         graph.findCicles('W');
         end = chrono::steady_clock::now();
