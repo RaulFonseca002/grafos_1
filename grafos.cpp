@@ -4,7 +4,7 @@
 #include <queue>
 #include <vector> 
 #include <fstream>
-#include <time.h>
+#include <chrono>
 
 using namespace std;
 
@@ -16,7 +16,6 @@ typedef struct Node
 {
     string name;
     int index;
-    vector<bool> reachable;
 
     Node(string name, int index){
         this->name = name;
@@ -103,7 +102,7 @@ class Graph{
 
             regex pattern("\\{([a-zA-Z]+),([a-zA-Z]+)\\}");
             smatch matches;
-            
+
             while (std::regex_search(str, matches, pattern)) {
 
                 matrix[getNodeIndex(matches[2])][getNodeIndex(matches[1])] = true;   
@@ -124,7 +123,7 @@ class Graph{
             regex pattern("/");
             regex_token_iterator<string::iterator> iterator(str.begin(), str.end(), pattern, -1);
             regex_token_iterator<string::iterator> end;
-            
+
             if(iterator->str().compare("d") == 0){
                 directed = true;
             }else if(iterator->str().compare("nd") == 0){
@@ -138,7 +137,7 @@ class Graph{
             setNodes(iterator->str());
             iterator++;
             setVerticies(iterator->str());
-            
+
 
         }
 
@@ -162,23 +161,16 @@ class Graph{
             return false;
         }
 
-        void validatePermutations(){
+        bool canReach(vector<int>path, int end){
+            return (matrix[path.front()][end]);
+        }
 
-            for(string s : permutations){
-
-                if((s.size() > 4) && canReach(s.substr(0,1), s.substr((s.length()-2),1))){
-                    if(!isInsertedCicle(s)){
-                        cicles.push_back(s);        
-                    }
-                }                
-                
-
-            }
-
+        bool isCircle(string path){
+            return (    (path.size() > 4) && 
+                        canReach(path.substr(0,1), path.substr((path.length()-2),1)));
         }
 
         void findCicles(char mode){
-
 
             this->mode = mode;
 
@@ -187,35 +179,10 @@ class Graph{
             }
 
             if(mode == 'P'){
-                validatePermutations();
+                for(string s : permutations){
+                    if(isCircle(s)) addCicle(s);             
+                }            
             }
-
-
-        }
-
-        void setReachable(const int root){
-
-            int index = root;
-            nodes[index].reachable.resize(nodes.size(), false);
-            nodes[index].reachable[index] = true;
-
-            queue<int> q;
-            q.push(index);
-
-            while(!q.empty()){
-                index = q.front();
-                q.pop();
-
-                for (int c = 0; c < nodes.size(); c++) {
-                    if (matrix[c][index]) {
-                        if(!nodes[root].reachable[c]){
-                            nodes[root].reachable[c] = true;
-                            q.push(c);
-                        }
-                    }
-                }
-            }
-            
         }
 
         void findCicles(string nodeName) {
@@ -224,31 +191,29 @@ class Graph{
             vector<int> path;
             vector<bool> founded(nodes.size(), false);
 
-            setReachable(index);
             findCicles(index, path, founded, index);
 
-
- 
         }
 
         void findCicles(int index, vector<int> path, vector<bool> founded, const int root) {
-            
+
             if(founded[index]){
-                if ((path[path.size()-2] != nodes[index].index) && mode == 'W'){
-                    addCicle(path, index);
-                }
-                
                 return;
             }
-            
-            nodes[root].reachable[index] = true;
+
             path.push_back(index);
             founded[index] = true;
 
             if(mode == 'P') permutations.push_back(getPathString(path, root));
-            
+
             for (int c = 0; c < nodes.size(); c++) {
                 if (matrix[c][index]) {
+
+                    if( mode == 'W' && matrix[path[0]][c]){
+                        if(isCircle(getPathString(path, root))) addCicle(getPathString(path, root));
+                        return;
+                    }
+
                     findCicles(c, path, founded, root);
                 }
             }
@@ -278,7 +243,7 @@ class Graph{
 
             return false;
         }
-        
+
         string getPathString(vector<int>path, int root){
 
             string resp = "";
@@ -290,17 +255,15 @@ class Graph{
             for(int index : path){
                 resp += nodes[index].name + " ";
             }
-            
+
             return resp;
 
         }
 
-        void addCicle(vector<int>path, int root){
+        void addCicle(string path){
 
-            string cicleStr = getPathString(path, root);
-
-            if(!isInsertedCicle(cicleStr)){
-                cicles.push_back(cicleStr);
+            if(!isInsertedCicle(path)){
+                cicles.push_back(path);
             }
 
         }
@@ -330,23 +293,37 @@ int main(int argc, char const *argv[])
     Graph graph;
     string inputString;
     int count = 1;
-    clock_t tStart = clock();
+
+    chrono::steady_clock::time_point begin, end;
+    int64_t P_time;
+    int64_t W_time;
 
     while (getline(inputFile, inputString)) {
-
         outputFile << "===================================\n";
         outputFile << "graph: " << count++ << endl;
+
         graph.set(inputString);
+
+        begin = chrono::steady_clock::now();
         graph.findCicles('P');
+        end = chrono::steady_clock::now();
+        P_time =  chrono::duration_cast<chrono::microseconds>(end - begin).count();
+        
+        begin = chrono::steady_clock::now();
+        graph.findCicles('W');
+        end = chrono::steady_clock::now();
+        W_time =  chrono::duration_cast<chrono::microseconds>(end - begin).count();
+
+        outputFile << "permutation time: " << P_time << endl;
+        outputFile << "walk time: " << W_time << endl;
+
         graph.writeCicles();
+        graph.clear();
     }
 
     outputFile << "===================================\n";
 
     inputFile.close();
     outputFile.close();
-
-    printf("Time taken: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
-
     return 0;
 }
