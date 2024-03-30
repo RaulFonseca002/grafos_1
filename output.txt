@@ -1,49 +1,55 @@
 ===================================
 graph: 1
+permutation time: 232
+walk time: 8
 (1): a b c 
-(2): b c e d 
-(3): a b d e c 
+(2): a b d e c 
+(3): b c e d 
 ===================================
 graph: 2
+permutation time: 19
+walk time: 6
 (1): a c b 
 ===================================
 graph: 3
+permutation time: 12075
+walk time: 15
 (1): a b c d 
-(2): b c d 
-(3): c d f 
-(4): a b c d f e 
-(5): b c d f e 
-(6): c d f e 
-(7): a b c e 
-(8): b c e 
-(9): c e f 
-(10): a b c e f d 
-(11): b c e f d 
-(12): a b c f d 
-(13): b c f d 
-(14): a b c f e 
-(15): b c f e 
-(16): a b d 
-(17): a b d c e 
-(18): b d c e 
-(19): a b d c f e 
-(20): b d c f e 
-(21): a b d f c e 
-(22): b d f c e 
-(23): a b d f e 
-(24): b d f e 
-(25): a b e 
-(26): a b e c d 
-(27): a b e c f d 
-(28): a b e f c d 
-(29): a b e f d 
-(30): a d b c e 
-(31): a d b c f e 
-(32): a d b e 
-(33): a d c b e 
-(34): a d c e 
-(35): a d c f e 
-(36): a d f c b e 
-(37): a d f c e 
-(38): a d f e 
+(2): a b c d f e 
+(3): a b c e 
+(4): a b c e f d 
+(5): a b c f d 
+(6): a b c f e 
+(7): a b d 
+(8): a b d c e 
+(9): a b d c f e 
+(10): a b d f c e 
+(11): a b d f e 
+(12): a b e 
+(13): a b e c d 
+(14): a b e c f d 
+(15): a b e f c d 
+(16): a b e f d 
+(17): a d b c e 
+(18): a d b c f e 
+(19): a d b e 
+(20): a d c b e 
+(21): a d c e 
+(22): a d c f e 
+(23): a d f c b e 
+(24): a d f c e 
+(25): a d f e 
+(26): b c d 
+(27): b c d f e 
+(28): b c e 
+(29): b c e f d 
+(30): b c f d 
+(31): b c f e 
+(32): b d c e 
+(33): b d c f e 
+(34): b d f c e 
+(35): b d f e 
+(36): c d f 
+(37): c d f e 
+(38): c e f 
 ===================================
